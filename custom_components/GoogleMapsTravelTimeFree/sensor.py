@@ -14,7 +14,7 @@ class TravelTimeSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator: coordinator, entry_id: str, idx: int, title: str):
         super().__init__(coordinator)
         self._idx = idx
-        self._attr_name = f"Travel Time {title}"
+        self._attr_name = f"{title} Travel Time"
         self._attr_unique_id = f"{entry_id}_{idx}"
         self._attr_native_unit_of_measurement = "min"
         self._attr_should_poll = False

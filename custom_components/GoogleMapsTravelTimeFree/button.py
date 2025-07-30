@@ -25,7 +25,7 @@ class TravelTimeButton(ButtonEntity):
     ):
         self.coordinator = coordinator
         self._idx = idx
-        self._attr_name = f"Update Travel Time {title}"
+        self._attr_name = f"{title} Update Travel Time"
         self._attr_unique_id = f"{entry_id}_{idx}_button"
 
     async def async_press(self) -> None:
