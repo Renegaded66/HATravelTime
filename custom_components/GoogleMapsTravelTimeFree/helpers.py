@@ -35,7 +35,7 @@ def berechne_reisezeit(start: str, end: str) -> float:
     _LOGGER.info(str(str(start) + "," + str(end)))
     try:
         with sync_playwright() as p:
-            browser = p.firefox.launch(headless=False, slow_mo=100)
+            browser = p.firefox.launch(headless=True, slow_mo=100)
             page = browser.new_page()
             page.goto(f"https://maps.google.com/maps/dir/{start}/{end}")
 

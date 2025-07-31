@@ -21,7 +21,7 @@ class TravelTimeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get(self._idx)
+        return self.coordinator.data.get(self._idx) if self.coordinator.data else None
 
 
 class TravelTimeLastUpdateSensor(CoordinatorEntity, SensorEntity):
@@ -30,7 +30,6 @@ class TravelTimeLastUpdateSensor(CoordinatorEntity, SensorEntity):
         self._idx = idx
         self._attr_name = f"{title} Last Update"
         self._attr_unique_id = f"{entry_id}_{idx}_last_update"
-        self._attr_native_unit_of_measurement = None
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._attr_should_poll = False
 
@@ -53,4 +52,4 @@ async def async_setup_entry(
         entities.append(
             TravelTimeLastUpdateSensor(coordinator, entry.entry_id, idx, title)
         )
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)  # , update_before_add=True)

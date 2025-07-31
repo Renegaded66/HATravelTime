@@ -2,9 +2,10 @@ import logging
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
-
+from datetime import datetime
 from .const import DOMAIN
 from .helpers import berechne_reisezeit
+from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 # SCAN_INTERVAL = timedelta(minutes=5)
@@ -17,6 +18,8 @@ class TravelTimeCoordinator(DataUpdateCoordinator[dict[int, float]]):
             _LOGGER,
             name=DOMAIN,
         )
+        self.data: dict[int, float] = {}
+        self.last_update: datetime | None = None
         self.config = config
 
     async def _async_update_data(self):

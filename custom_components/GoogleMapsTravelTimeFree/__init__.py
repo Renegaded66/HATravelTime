@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     # entry.runtime_data = MyAPI(...)
     coordinator = TravelTimeCoordinator(hass, entry.data)
     entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    # await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
