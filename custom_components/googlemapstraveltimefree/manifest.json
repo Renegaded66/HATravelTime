@@ -10,5 +10,6 @@
   "quality_scale": "bronze",
   "requirements": ["playwright", "requests", "nest-asyncio"],
   "ssdp": [],
-  "zeroconf": []
+  "zeroconf": [],
+  "version": "1.0.0"
 }
