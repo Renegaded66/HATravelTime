@@ -1,6 +1,7 @@
 {
   "name": "Google Maps Travel Time Free",
   "content_in_root": false,
+  "domain": "google_maps_travel_time_free",
   "homeassistant": "2023.8",
   "hacs": "1.0.0"
 }

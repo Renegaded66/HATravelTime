@@ -1,5 +1,5 @@
 {
-  "domain": "googlemapstraveltimefree",
+  "domain": "google_maps_travel_time_free",
   "name": "Google Maps Travel Time Free (No Api Key)",
   "codeowners": ["@Renegaded66"],
   "config_flow": true,
