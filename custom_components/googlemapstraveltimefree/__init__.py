@@ -17,11 +17,11 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 # TODO Create ConfigEntry type alias with API object
 type TravelTimeConfigEntry = ConfigEntry[coordinator]
 # TODO Rename type alias and update all entry annotations
-type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
-
+#type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
+type TravelTimeConfigEntry = ConfigEntry[TravelTimeCoordinator]
 
 # TODO Update entry annotation
-async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TravelTimeConfigEntry) -> bool:
     """Set up Google Maps Travel Time Free (No Api Key) from a config entry."""
 
     # TODO 1. Create API instance
