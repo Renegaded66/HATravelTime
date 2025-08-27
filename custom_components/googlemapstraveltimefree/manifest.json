@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "calculated",
   "quality_scale": "bronze",
-  "requirements": ["playwright", "requests", "nest-asyncio"],
+  "requirements": [],
   "ssdp": [],
   "zeroconf": [],
   "version": "1.0.0"
