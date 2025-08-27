@@ -15,4 +15,4 @@ ENV PYTHONPATH=/app/vendor
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/browsers
 
 # Startscript
-CMD ["python3", "/app/main.py"]
+CMD ["python3", "app/main.py"]
