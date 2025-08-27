@@ -1,74 +1,28 @@
 import logging
-from pathlib import Path
-import subprocess
-import sys
-
+import requests
 
 _LOGGER = logging.getLogger(__name__)
 
-
-import subprocess
-import sys
-from pathlib import Path
-
-
-def ensure_playwright_installed():
-    try:
-        subprocess.check_call(["playwright", "--version"], stderr=subprocess.DEVNULL)
-    except FileNotFoundError:
-        _LOGGER.error("Playwright CLI not found.")
-        return
-
-    try:
-        # Browser installieren, falls noch nicht installiert
-        subprocess.check_call(["playwright", "install", "firefox"])
-        _LOGGER.info("Successfully installed playwright browser.")
-    except Exception as e:
-        print(f"Exception: {e}")
-        _LOGGER.error(f"Error while installing browser: {e}")
-
+ADDON_URL = "http://localhost:5000/reisezeit"  
+# Wenn dein Addon in Docker läuft, evtl. URL anpassen:
+# z.B. "http://a0d7b954-reisezeit:5000/reisezeit"
 
 def berechne_reisezeit(start: str, end: str) -> float:
-    ensure_playwright_installed()
-    from playwright.sync_api import sync_playwright
-
-    _LOGGER.info(str(str(start) + "," + str(end)))
     try:
-        with sync_playwright() as p:
-            browser = p.firefox.launch(headless=True, slow_mo=100)
-            page = browser.new_page()
-            page.goto(f"https://maps.google.com/maps/dir/{start}/{end}")
+        response = requests.post(
+            ADDON_URL,
+            json={"start": start, "end": end},
+            timeout=30
+        )
+        response.raise_for_status()
+        data = response.json()
 
-            # Warten, bis das Cookie-Zustimmungsbanner sichtbar ist
-            page.wait_for_selector(
-                'xpath=//button[contains(., "Alle ablehnen") or contains(., "Reject all") or contains(., "Rechazar todo") or contains(., "Tout refuser")]'
-            )
+        if "fahrtzeit" in data:
+            return data["fahrtzeit"]
+        else:
+            _LOGGER.error("Fehlerhafte Antwort vom Addon: %s", data)
+            return -1
 
-            # Klicken auf den ersten gefundenen Button
-            page.locator(
-                'xpath=//button[contains(., "Alle ablehnen") or contains(., "Reject all") or contains(., "Rechazar todo") or contains(., "Tout refuser")]'
-            ).first.click()
-
-            # Warten, bis die Seite vollständig geladen ist
-            page.wait_for_timeout(5000)
-            html = page.inner_html("#section-directions-trip-0")
-            # print(html)
-            # fahrtzeit = html.split('<div class="Fk3sm fontHeadlineSmall delay-light">')[
-            #    1
-            # ]
-            fahrtzeit = html.split("</div>")[0].split("Fk3sm")[1].split('">')[1]
-            # print(fahrtzeit)
-            fahrtzeit = fahrtzeit.split("</div>")[0]
-            # print(fahrtzeit)
-            if "&nbsp;h" in fahrtzeit:
-                fahrtzeit = int(fahrtzeit.split("&nbsp;h")[0].strip()) * 60 + int(
-                    fahrtzeit.split("&nbsp;h")[1].strip().split(" ")[0].strip()
-                )
-            else:
-                fahrtzeit = int(fahrtzeit.strip().split(" ")[0].strip())
-            # if fahrtzeit.isnmeric():
-            return int(fahrtzeit)
     except Exception as e:
-        print(e)
-        # _LOGGER.info(f"Error while fetching Website Data: {e}")
+        _LOGGER.error("Fehler bei Anfrage an Addon: %s", e)
         return -1
