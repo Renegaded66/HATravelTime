@@ -1,0 +1,7 @@
+name: "Google Maps Travel Time"
+version: "1.0.0"
+slug: "googlemapstraveltime"
+description: "Test-Addon für Travel Time"
+arch:
+  - amd64
+startup: services
