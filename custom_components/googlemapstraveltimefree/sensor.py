@@ -1,6 +1,5 @@
 """Two Sensors, one for the travel time and one for last update"""
 
-from homeassistant.components.googlemapstraveltimefree import coordinator
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
