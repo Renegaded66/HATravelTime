@@ -1,6 +1,6 @@
 """Two Sensors, one for the travel time and one for last update"""
 
-from homeassistant.components.googlemapstraveltimefree import coordinator
+#from homeassistant.components.googlemapstraveltimefree import coordinator
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,9 @@ from .coordinator import TravelTimeCoordinator
 
 
 class TravelTimeSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator: coordinator, entry_id: str, idx: int, title: str):
+    def __init__(
+        self, coordinator: TravelTimeCoordinator, entry_id: str, idx: int, title: str
+    ):
         super().__init__(coordinator)
         self._idx = idx
         self._attr_name = f"{title} Travel Time"
