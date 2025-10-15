@@ -1,10 +1,10 @@
 {
-  "domain": "googlemapstraveltimefree",
-  "name": "Google Maps Travel Time Free (No Api Key)",
+  "domain": "traveltime",
+  "name": "Travel Time Free (No Api Key)",
   "codeowners": ["@Renegaded66"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.home-assistant.io/integrations/googlemapstraveltimefree",
+  "documentation": "https://github.com/Renegaded66/HATravelTime",
   "homekit": {},
   "iot_class": "calculated",
   "quality_scale": "bronze",
