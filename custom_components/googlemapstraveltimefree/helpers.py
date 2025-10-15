@@ -3,7 +3,7 @@ import requests
 
 _LOGGER = logging.getLogger(__name__)
 
-ADDON_URL = "http://travel_time:8000/traveltime"  # interner Name = slug des Add-ons
+ADDON_URL = "http://travel_time:6730/traveltime"  # interner Name = slug des Add-ons
 
 def berechne_reisezeit(start: str, end: str) -> float:
     """
