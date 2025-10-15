@@ -29,6 +29,26 @@ The **HATravelTime** solution requires installing two components via the Custom 
 3. Find **Google Maps Travel Time**, click **"Download"**.  
 4. **Restart Home Assistant** to finalize.
 
+<details>
+<summary>With HACS</summary>
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
+
+1. Add this repo as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/).
+   It should then appear as a new integration. Click on it. If necessary, search for "Travel Time".
+
+   ```text
+   https://github.com/Renegaded66/HATravelTime
+   ```
+   Or use this button:
+   
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pnbruckner&repository=traveltime&category=integration)
+
+
+1. Download the integration using the appropriate button.
+
+</details>
+
 ### **B. Add-on Installation (Required Backend)**
 
 The Add-on is **mandatory** because external libraries cannot run inside a standard integration.
