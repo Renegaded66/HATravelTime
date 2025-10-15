@@ -1,0 +1,16 @@
+
+---
+
+## 2️⃣ `.gitignore`
+
+```gitignore
+# Python
+__pycache__/
+*.pyc
+
+# Home Assistant
+*.db
+*.log
+
+# VSCode
+.vscode/

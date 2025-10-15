@@ -3,5 +3,9 @@
   "content_in_root": false,
   "domain": "traveltime",
   "homeassistant": "2023.8",
+  "zip_release": false,
+  "release_commit": true,
+   "iot_class": "cloud_polling",
   "hacs": "1.0.0"
 }
+
