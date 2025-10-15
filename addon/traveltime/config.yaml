@@ -1,0 +1,15 @@
+name: "Travel Time"
+description: "My first real add-on!"
+version: "1.0.0"
+slug: "googlemapstraveltime"
+init: false
+startup: application
+boot: manual
+ports:
+  8000/tcp: 8000
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
