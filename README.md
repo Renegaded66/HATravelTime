@@ -29,7 +29,7 @@ The **HATravelTime** solution requires installing two components via the Custom 
 3. Find **Google Maps Travel Time**, click **"Download"**.  
 4. **Restart Home Assistant** to finalize.
 
-<details>
+
 <summary>With HACS</summary>
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
@@ -40,14 +40,6 @@ The **HATravelTime** solution requires installing two components via the Custom 
    ```text
    https://github.com/Renegaded66/HATravelTime
    ```
-   Or use this button:
-   
-   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pnbruckner&repository=traveltime&category=integration)
-
-
-1. Download the integration using the appropriate button.
-
-</details>
 
 ### **B. Add-on Installation (Required Backend)**
 
@@ -55,7 +47,7 @@ The Add-on is **mandatory** because external libraries cannot run inside a stand
 
 1. Go to the **Add-on Store**. Go to the **three dots menu** (⋮) → **"Repositories"**.  
 2. Paste the URL above. Click **"Add"**.  
-3. Find the new **Google Maps Travel Time Add-on**. Click **"Install"**. (This may take a moment due to browser library downloads.)  
+3. Find the new **Travel Time Add-on**. Click **"Install"**. (This may take a moment due to browser library downloads.)  
 4. **No configuration is needed**. Simply click **"Start"**.  
 5. Check the Logs for a message like **"Starting Travel Time"** to confirm the service is running.
 
@@ -78,8 +70,11 @@ First, set up your desired route in the Integration settings.
 * **Step 1: Click 'Add Entry'**  
 * Step 2: Name & Locations  
   Provide a Name for your trip and select the Start Point (Source) and Destination Point (Target).  
+  ![alt text](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot1.png)
+  ![alt text](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot2.png)
 * Step 3: Entities Created  
   After saving, the Button, Sensor, and Last Updated entities for your trip are now available in Home Assistant.
+  ![alt text](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot3.png)
 
 #### **2\. Triggering the Calculation**
 

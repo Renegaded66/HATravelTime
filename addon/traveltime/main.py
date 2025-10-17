@@ -12,6 +12,7 @@ def get_travel_time(start: str, end: str) -> int:
     Diese Funktion startet Playwright, navigiert zu Google Maps
     und extrahiert die Reisezeit.
     """
+    print("Got request")
     try:
         with sync_playwright() as p:
             browser = p.firefox.launch(headless=True)
@@ -56,7 +57,11 @@ def get_travel_time(start: str, end: str) -> int:
         # Browser im Fehlerfall schließen
         if 'browser' in locals() and browser.is_connected():
             browser.close()
+        print("Fehler in get_travel_time:", e)
+        import traceback
+        traceback.print_exc()
         return -1
+
 
 @app.route('/traveltime', methods=['GET'])
 def travel_time_endpoint():
@@ -79,4 +84,4 @@ def travel_time_endpoint():
 
 if __name__ == "__main__":
     from waitress import serve
-    serve(app, host="0.0.0.0", port=8000)
+    serve(app, host="0.0.0.0", port=6730)
