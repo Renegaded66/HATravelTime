@@ -1,5 +1,5 @@
 name: "Travel Time"
-description: "My first real add-on!"
+description: "Unlimited travel-time lookups via Google Maps — no registration, credit card, or API key required."
 version: "1.0.0"
 slug: "googlemapstraveltime"
 init: false
