@@ -1,16 +1,16 @@
 name: "Travel Time"
-description: "Unlimited travel-time lookups via Google Maps — no registration, credit card, or API key required."
-version: "1.0.1"
-slug: "googlemapstraveltime"
+description: "My first real add-on!"
+version: "1.0.0"
+slug: "travel_time"
 init: false
 startup: application
 boot: manual
+host_network: true
 ports:
-  8000/tcp: 8000
+  6730/tcp: 6730
 arch:
   - aarch64
   - amd64
   - armhf
   - armv7
   - i386
-url: "https://github.com/Renegaded66/HATravelTime"

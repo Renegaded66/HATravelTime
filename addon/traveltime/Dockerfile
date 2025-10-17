@@ -17,7 +17,7 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Playwright + Browser installieren
-RUN pip install --no-cache-dir playwright flask nest-asyncio waitress && playwright install chromium
+RUN pip install --no-cache-dir playwright flask nest-asyncio waitress && playwright install firefox
 
 # Service Script kopieren
 COPY run.sh /etc/services.d/travel_time/run

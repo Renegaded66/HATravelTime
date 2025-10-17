@@ -70,7 +70,7 @@ First, set up your desired route in the Integration settings.
 * **Step 1: Click 'Add Entry'**  
 * Step 2: Name & Locations  
   Provide a Name for your trip and select the Start Point (Source) and Destination Point (Target).  
-  ![alt text](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot1.png)
+  [<img src ="https://github.com/Renegaded66/HATravelTime/pictures/Screenshot1.png" width="240">](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot1.png)
   ![alt text](https://github.com/Renegaded66/HATravelTime/pictures/Screenshot2.png)
 * Step 3: Entities Created  
   After saving, the Button, Sensor, and Last Updated entities for your trip are now available in Home Assistant.
