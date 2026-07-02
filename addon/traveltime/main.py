@@ -1,11 +1,73 @@
 from flask import Flask, request, jsonify
 from playwright.sync_api import sync_playwright
 import nest_asyncio
+import re
+import urllib.parse
 
 # nest_asyncio anwenden, um Event-Loop-Konflikte zu vermeiden
 nest_asyncio.apply()
 
 app = Flask(__name__)
+
+COOKIE_BUTTON_TEXTS = re.compile(
+    r"Alle ablehnen|Reject all|Alles ablehnen|Accept all|Alle akzeptieren",
+    re.IGNORECASE,
+)
+DURATION_PATTERN = re.compile(
+    r"(?:(\d+)\s*(?:Std\.?|Stunden?|h)\s*)?(\d+)\s*min\b",
+    re.IGNORECASE,
+)
+DISTANCE_PATTERN = re.compile(r"\b\d+(?:[,.]\d+)?\s*km\b", re.IGNORECASE)
+
+
+def duration_to_minutes(text: str) -> int | None:
+    """Extrahiert eine Dauer wie '27 min' oder '2 h 31 min' als Minuten."""
+    match = DURATION_PATTERN.search(text.replace("\xa0", " "))
+    if not match:
+        return None
+
+    hours = int(match.group(1) or 0)
+    minutes = int(match.group(2))
+    return hours * 60 + minutes
+
+
+def get_best_route_text(page) -> str:
+    """
+    Liefert den Text der ersten Auto-Route in Google Maps.
+
+    Google Maps hat die alten stabilen IDs wie #section-directions-trip-0
+    entfernt. Aktuell stehen die Routen als sichtbare Cards im Routenplaner
+    mit role=link/button. Eine Auto-Route enthält Dauer + Entfernung, während
+    die Transportmodus-Leiste oben nur die Dauer enthält.
+    """
+    selectors = [
+        # Aktuelles Google-Maps-Markup: einzelne Routenkarten
+        'div[role="main"] div[role="link"]',
+        'div[role="main"] div[role="button"]',
+        # Fallback, falls Google die role-Attribute wieder ändert
+        'div[role="main"] div',
+    ]
+
+    for selector in selectors:
+        elements = page.locator(selector).all()
+        for element in elements:
+            try:
+                if not element.is_visible():
+                    continue
+                text = element.inner_text(timeout=1000).replace("\xa0", " ").strip()
+            except Exception:
+                continue
+
+            if DURATION_PATTERN.search(text) and DISTANCE_PATTERN.search(text):
+                return text
+
+    # Letzter Fallback: gesamten Routenplanertext scannen
+    planner_text = page.locator('div[role="main"]').inner_text(timeout=5000).replace("\xa0", " ")
+    if DURATION_PATTERN.search(planner_text):
+        return planner_text
+
+    raise ValueError("Keine Reisezeit im Google-Maps-Routenplaner gefunden.")
+
 
 def get_travel_time(start: str, end: str) -> int:
     """
@@ -13,49 +75,41 @@ def get_travel_time(start: str, end: str) -> int:
     und extrahiert die Reisezeit.
     """
     print("Got request")
+    browser = None
     try:
         with sync_playwright() as p:
+            # Firefox bleibt Standard für das Home-Assistant-Add-on.
             browser = p.firefox.launch(headless=True)
-            page = browser.new_page()
-            
-            # URL-Format angepasst, um korrekte Navigation zu gewährleisten
-            url = f"https://www.google.com/maps/dir/{start}/{end}"
-            page.goto(url)
+            page = browser.new_page(locale="de-DE", timezone_id="Europe/Berlin")
 
-            # Auf Cookie-Banner warten und ablehnen
+            url = (
+                "https://www.google.com/maps/dir/"
+                f"{urllib.parse.quote(start, safe='')}/"
+                f"{urllib.parse.quote(end, safe='')}"
+            )
+            page.goto(url, wait_until="domcontentloaded", timeout=60000)
+
+            # Auf Cookie-Banner warten und ablehnen/akzeptieren, falls vorhanden.
             try:
-                reject_button = page.locator('button:has-text("Alle ablehnen")').first
-                reject_button.wait_for(timeout=5000) # 5 Sekunden warten
-                reject_button.click()
-            except Exception as e:
-                print("Error")
+                page.get_by_role("button", name=COOKIE_BUTTON_TEXTS).first.click(timeout=5000)
+            except Exception:
+                pass
 
-            # Auf das Element mit der Reisezeit warten
-            # Der Selektor zielt auf das erste prominente div mit der Zeitangabe
-            trip_selector = "div#section-directions-trip-0"
-            page.wait_for_selector(trip_selector, timeout=15000)
-            
-            # HTML-Inhalt des relevanten Abschnitts extrahieren
-            html = page.inner_html(trip_selector)
-            
-            # Reisezeit extrahieren (deine Logik, leicht angepasst für Robustheit)
-            # Sucht nach einem Div, das "h" oder "min" enthält
-            time_str_part = html.split('</div>')[0].split('">')[-1]
-            
-            
-            fahrtzeit_minuten = 0
-            if "h" in time_str_part:
-                parts = time_str_part.replace('h', '').replace('min', '').split()
-                fahrtzeit_minuten = int(parts[0]) * 60 + int(parts[1])
-            else:
-                fahrtzeit_minuten = int(time_str_part.replace('min', '').strip())
-                
+            # Auf den aktuellen Routenplaner warten. Die frühere ID
+            # #section-directions-trip-0 existiert derzeit nicht mehr.
+            page.wait_for_selector('div[role="main"]', timeout=30000)
+            page.wait_for_timeout(2000)
+
+            route_text = get_best_route_text(page)
+            travel_time = duration_to_minutes(route_text)
+            if travel_time is None:
+                raise ValueError(f"Reisezeit konnte nicht ausgelesen werden: {route_text!r}")
+
             browser.close()
-            return fahrtzeit_minuten
+            return travel_time
 
     except Exception as e:
-        # Browser im Fehlerfall schließen
-        if 'browser' in locals() and browser.is_connected():
+        if browser is not None and browser.is_connected():
             browser.close()
         print("Fehler in get_travel_time:", e)
         import traceback
