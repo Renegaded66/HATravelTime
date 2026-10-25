@@ -1,98 +1,159 @@
-# **Google Maps Travel Time**
+![Travel Time](custom_components/traveltimefree/brand/logo.png)
 
-## **✨ Free & Open Source**
+# Travel Time for Home Assistant
 
-This Add-on and Integration is completely **free to use**, requires **no registration**, and uses **no external subscriptions**. It is an open-source community project.  
-This custom Home Assistant integration and companion Add-on retrieves the current travel time between two defined locations from Google Maps upon request, enabling powerful automations based on real-time traffic conditions.
+A custom Home Assistant integration that answers one question: **how long does this trip take
+right now?** It asks Google Maps (via a small companion add-on that runs a headless browser) and
+exposes the result as a sensor, so automations can react to real traffic conditions.
 
-## **🚀 Features**
+* **Free and open source** – no API key, no registration, no subscription.
+* **Real Google Maps data**, including current traffic.
+* **Start and destination can be addresses *or* entities** – `person`, `zone`, `device_tracker`
+  or any `sensor` that carries coordinates.
+* **Entities are resolved when the value is requested**, so a `person` start point uses the
+  coordinates that person has *at that moment*.
+* **Everything on one page**: name, start, destination (and an optional update interval).
+* **Editable at any time** – `Configure` / `Reconfigure` on the integration entry.
+* **Manual or automatic** – press the button, or let it refresh on a schedule you choose.
 
-* **On-Demand:** Calculation is triggered by a button entity to save resources (no continuous polling).  
-* **Real-Time Data:** Uses a dedicated Playwright/Firefox Add-on backend for accurate Google Maps data.  
-* **Modular Architecture:** Runs necessary scraping libraries (Playwright/Firefox) in a dedicated Add-on container, keeping the core Home Assistant system stable.  
-* **Status Tracking:** Provides a last\_updated sensor to monitor the timestamp of the last request status.
+## Requirements
 
-## **💾 Installation**
+| Component | Why |
+| :-- | :-- |
+| **Travel Time** add-on (this repository) | Scrapes Google Maps with Playwright/Firefox. Home Assistant integrations cannot ship browser engines, so the add-on is mandatory. |
+| Home Assistant **2026.3** or newer for the logo | Local brand images (`brand/` inside the integration) are supported since 2026.3. Everything else works on older versions. |
 
-The **HATravelTime** solution requires installing two components via the Custom Repository feature: **The Integration** (HACS) and **The Add-on** (Backend).
+## Installation
 
-### **Repository URL (for both)**
+### 1. Add-on (backend)
 
-| Repository URL (for custom repositories) |
-| :---- |
-| https://github.com/Renegaded66/HATravelTime.git |
+1. **Settings → Add-ons → Add-on store → ⋮ → Repositories**
+2. Add `https://github.com/Renegaded66/HATravelTime`
+3. Install **Travel Time**, then **Start** it.
+   `boot: auto` keeps it running across restarts; the watchdog restarts it if it crashes.
 
-### **A. Integration Installation (via HACS)**
+### 2. Integration (HACS)
 
-1. Open **HACS**. Go to the **three dots menu** (⋮) → **"Custom repositories"**.  
-2. Paste the URL above and select **"Integration"**. Click **"Add"**.  
-3. Find **Google Maps Travel Time**, click **"Download"**.  
-4. **Restart Home Assistant** to finalize.
+1. **HACS → ⋮ → Custom repositories** → add `https://github.com/Renegaded66/HATravelTime`
+   with category **Integration**.
+2. Install **Travel Time**, then restart Home Assistant.
 
+## Setup: one page, three fields
 
-<summary>With HACS</summary>
+**Settings → Devices & services → Add integration → Travel Time**
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
+| Field | What to enter |
+| :-- | :-- |
+| **Name** | Name of the trip, e.g. `Commute` – becomes the device name. |
+| **Start** | An address (`Bahnhofstraße 1, 44532 Lünen`) **or** an entity from the list (`Devon (person.devon)`). |
+| **Destination** | Same as start. |
+| **Update automatically** | `0` = only when the refresh button is pressed. Any other value = refresh every *n* minutes. |
 
-1. Add this repo as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/).
-   It should then appear as a new integration. Click on it. If necessary, search for "Travel Time".
+The start/destination pickers are combo boxes: they list every `person`, `zone`,
+`device_tracker` and every `sensor` that currently has coordinates, and you can simply type an
+address instead of picking an entity. Addresses are passed to Google Maps unchanged.
 
-   ```text
-   https://github.com/Renegaded66/HATravelTime
-   ```
+### Why entities instead of coordinates?
 
-### **B. Add-on Installation (Required Backend)**
+An address is fixed, but a person is not. When the travel time is requested, the integration reads
+the entity's **current** `latitude`/`longitude` and sends those coordinates to Google Maps. So:
 
-The Add-on is **mandatory** because external libraries cannot run inside a standard integration.
+* *Start = `person.devon`* means "the way from wherever Devon is right now".
+* *Start = `zone.home`, destination = `zone.arbeit`* always uses the zone centres.
+* If a person has no GPS fix at that moment (state `unknown`, no coordinates), the request fails
+  with a clear message instead of silently using stale coordinates.
 
-1. Go to the **Add-on Store**. Go to the **three dots menu** (⋮) → **"Repositories"**.  
-2. Paste the URL above. Click **"Add"**.  
-3. Find the new **Travel Time Add-on**. Click **"Install"**. (This may take a moment due to browser library downloads.)  
-4. **No configuration is needed**. Simply click **"Start"**.  
-5. Check the Logs for a message like **"Starting Travel Time"** to confirm the service is running.
+## Entities
 
-## **🛠️ Integration Configuration & Usage**
+One device per trip, with three entities:
 
-Once both components are running, you can configure multiple trips.
+| Entity | Description |
+| :-- | :-- |
+| `sensor.<trip>_travel_time` | Travel time in **minutes** (`duration` device class, statistics enabled). |
+| `sensor.<trip>_last_updated` | Timestamp of the last successful request. |
+| `button.<trip>_refresh_now` | Triggers a request immediately. |
 
-### **Configuration**
+The travel time sensor carries the details of the last request as attributes:
 
-Define your desired trips, specifying a **Name**, **Start Point (Source)**, and **Destination Point (Target)** for each.
+| Attribute | Meaning |
+| :-- | :-- |
+| `start`, `end` | What you configured. |
+| `start_query`, `end_query` | What was actually sent to Google Maps (address or `lat,lon`). |
+| `start_label`, `end_label` | Friendly name of a resolved entity. |
+| `start_source`, `end_source` | `address` or `entity`. |
+| `distance_km` | Route distance, if the add-on provides it. |
+| `last_successful_update` | Same timestamp as the *Last updated* sensor. |
 
-### **Usage: Step-by-Step Guide**
+If a request fails (add-on stopped, no GPS fix, Google unreachable) the entities become
+**unavailable** and the reason is written to the log – never a fake value.
 
-The travel time calculation is always triggered by the Button entity.
+## Editing a trip
 
-#### **1\. Configure Your Trip**
+* **Settings → Devices & services → Travel Time → Configure** opens the same one-page form with
+  the current values, including the name. Saving reloads the entry with the new settings.
+* **⋮ → Reconfigure** does the same from the entry menu.
 
-First, set up your desired route in the Integration settings.
+Existing trips from version 1.x are migrated automatically on first start; their entity ids and
+history are preserved.
 
-* **Step 1: Click 'Add Entry'**  
-* Step 2: Name & Locations  
-  Provide a Name for your trip and select the Start Point (Source) and Destination Point (Target).  
-  ![alt text](./pictures/Screenshot1.png)
-* Step 3: Entities Created  
-  After saving, the Button, Sensor, and Last Updated entities for your trip are now available in Home Assistant.
-  ![alt text](./pictures/Screenshot2.png)
+## Automations
 
-#### **2\. Triggering the Calculation**
+```yaml
+# Every weekday at 06:45: refresh the commute and report it
+automation:
+  - alias: "Commute travel time"
+    triggers:
+      - trigger: time
+        at: "06:45:00"
+    conditions:
+      - condition: time
+        weekday: [mon, tue, wed, thu, fri]
+    actions:
+      - action: button.press
+        target:
+          entity_id: button.commute_jetzt_aktualisieren
+      - delay: "00:00:20"
+      - action: notify.send_message
+        data:
+          message: >
+            Commute: {{ states('sensor.commute_reisezeit') }} min
+            ({{ state_attr('sensor.commute_reisezeit', 'distance_km') }} km)
+```
 
-To get the real-time travel time, you must interact with the Button entity.
+Entity ids follow the Home Assistant UI language at creation time (German UI: `_reisezeit`,
+`_jetzt_aktualisieren`; English UI: `_travel_time`, `_refresh_now`). Pick them from
+**Developer tools → States** for your instance.
 
-* Step 4: Access the Button Entity  
-  Navigate to the Button entity (e.g., button.commute\_to\_work\_calculate) on your dashboard or in Developer Tools.  
-* Step 5: Calculate (Press)  
-  Click "PRESS" (or "Drücken" in German UI) on the Button entity to send the scraping request to the Add-on.  
-  \[Image showing a clicked/activated button entity\]  
-* Step 6: Verify Update  
-  Wait a few moments (usually 5-15 seconds) until the Last Updated Entity (e.g., sensor.commute\_to\_work\_last\_updated) is updated to the current time, confirming the request has completed successfully or failed.  
-  \[Image showing the sensor.commute\_to\_work\_last\_updated entity updated with a recent timestamp\]  
-* Step 7: View Travel Time  
-  The real-time travel time is now available in the Sensor Entity (e.g., sensor.commute\_to\_work\_travel\_time).
+If you set an update interval, the button call becomes unnecessary – the sensor updates itself.
 
-### **Automation and Script Usage**
+## Troubleshooting
 
-This feature is best used within Home Assistant Automations and Scripts by calling the button.press service on your trip's button entity.
+| Symptom | Fix |
+| :-- | :-- |
+| *"Add-on is not reachable"* while adding a trip | The add-on is not running. **Settings → Add-ons → Travel Time → Start**, then retry. |
+| Entities show `unavailable` | Check **Settings → System → Logs** for `traveltime`: the message names the exact cause (add-on, no coordinates, Google error). |
+| Logo/icon missing in Home Assistant | HA serves brand images from `custom_components/traveltimefree/brand/` since 2026.3. Update the integration and restart; browsers cache brand images for up to 7 days. |
+| Requests take a long time | A scrape needs 5–30 s. Do not poll more often than every 15 minutes; Google may throttle aggressive scraping. |
+| Values are stale | Either press the refresh button, or set an update interval in the configuration. |
 
-* Automation Example: Monday Commute Notification  
-  This automation notifies you of the travel time every Monday morning at 7:00 AM.
+Diagnostics: **Settings → Devices & services → Travel Time → ⋮ → Download diagnostics** contains
+the configuration, the last resolved endpoints and the last error.
+
+## Known limitations
+
+* Google Maps is scraped from the rendered page, not queried through an official API. If Google
+  changes its markup, the add-on needs an update.
+* Only *now* is supported – there is no "departure at 17:00" calculation.
+* The add-on needs roughly 500 MB of disk space (Firefox + Playwright).
+
+## Development
+
+```bash
+python3 -m pytest                      # integration unit tests (no Home Assistant needed)
+python3 -m pytest addon/traveltime/tests   # add-on parser tests
+python3 scripts/generate_brand_assets.py   # regenerate icon/logo (needs Pillow)
+```
+
+## License
+
+See [License](License).

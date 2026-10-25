@@ -1,45 +1,85 @@
-"""The Google Maps Travel Time Free (No Api Key) integration."""
+"""The Travel Time integration."""
 
 from __future__ import annotations
 
-#from homeassistant.components.googlemapstraveltimefree import coordinator
+import logging
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_END, CONF_START, CONFIG_VERSION
 from .coordinator import TravelTimeCoordinator
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
+_LOGGER = logging.getLogger(__name__)
 
-# TODO Create ConfigEntry type alias with API object
-type TravelTimeConfigEntry = ConfigEntry[coordinator]
-# TODO Rename type alias and update all entry annotations
-#type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
-type TravelTimeConfigEntry = ConfigEntry[TravelTimeCoordinator]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 
-# TODO Update entry annotation
+TravelTimeConfigEntry = ConfigEntry[TravelTimeCoordinator]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TravelTimeConfigEntry) -> bool:
-    """Set up Google Maps Travel Time Free (No Api Key) from a config entry."""
+    """Set up one trip from a config entry."""
+    coordinator = TravelTimeCoordinator(hass, entry)
+    # Raises ConfigEntryNotReady if the add-on is down or Google Maps cannot be reached,
+    # so setup problems are visible in the UI instead of silently yielding "unknown".
+    await coordinator.async_config_entry_first_refresh()
 
-    # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (and authentication)
-    # TODO 3. Store an API object for your platforms to access
-    # entry.runtime_data = MyAPI(...)
-    coordinator = TravelTimeCoordinator(hass, entry.data)
     entry.runtime_data = coordinator
-    # await coordinator.async_config_entry_first_refresh()
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-# TODO Update entry annotation
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TravelTimeConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    if unload_ok:
-        # Nur den spezifischen Eintrag aus runtime_data entfernen
-        entry.runtime_data = None  # optional, HG automatisch gelöscht
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate a version 1 entry (one entry with a list of coordinate pairs) to version 2."""
+    if entry.version > CONFIG_VERSION:
+        # Downgrade from a newer version - do not touch the entry.
+        _LOGGER.error(
+            "Eintrag %s hat Version %s, diese Integration kennt nur %s",
+            entry.entry_id,
+            entry.version,
+            CONFIG_VERSION,
+        )
+        return False
+
+    if entry.version == 1:
+        coordinates = entry.data.get("coordinates") or []
+        if not coordinates:
+            _LOGGER.error(
+                "Eintrag %s enthält keinen Start-/Zielpunkt und kann nicht migriert werden",
+                entry.entry_id,
+            )
+            return False
+
+        if len(coordinates) > 1:
+            _LOGGER.warning(
+                "Eintrag %s enthielt %s Strecken; es wird nur die erste übernommen. "
+                "Weitere Strecken bitte als eigenen Eintrag anlegen.",
+                entry.entry_id,
+                len(coordinates),
+            )
+
+        first = coordinates[0]
+        start = (first.get("Start") or "").strip()
+        end = (first.get("End") or "").strip()
+        if not start or not end:
+            _LOGGER.error(
+                "Eintrag %s enthält keinen gültigen Start-/Zielpunkt", entry.entry_id
+            )
+            return False
+
+        name = (entry.data.get(CONF_NAME) or entry.title or "Reisezeit").strip()
+        hass.config_entries.async_update_entry(
+            entry,
+            title=name,
+            data={CONF_NAME: name, CONF_START: start, CONF_END: end},
+            version=CONFIG_VERSION,
+        )
+        _LOGGER.info("Eintrag %s auf Version %s migriert", entry.entry_id, CONFIG_VERSION)
+
+    return entry.version == CONFIG_VERSION

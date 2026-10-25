@@ -1,10 +1,11 @@
 name: "Travel Time"
-description: "My first real add-on!"
-version: "1.0.1"
+description: "Scrapes Google Maps for travel times and serves them to the Travel Time integration."
+version: "1.1.0"
 slug: "travel_time"
 init: false
 startup: application
-boot: manual
+boot: auto
+watchdog: true
 host_network: true
 ports:
   6730/tcp: 6730

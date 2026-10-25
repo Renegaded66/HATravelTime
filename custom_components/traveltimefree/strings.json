@@ -2,20 +2,91 @@
   "config": {
     "step": {
       "user": {
+        "title": "Set up a trip",
+        "description": "One page, three fields. For **start** and **destination** you can either type an **address** or pick an **entity** (person, zone, device tracker, sensor with coordinates). Entities are resolved to their current coordinates on every request.\n\nRequires the **Travel Time** add-on to be installed and running.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "startingPoint": "[%key:common::config_flow::data::location%]",
-          "destination": "[%key:common::config_flow::data::location%]"
+          "name": "Name",
+          "start": "Start",
+          "end": "Destination",
+          "scan_interval": "Update automatically"
+        },
+        "data_description": {
+          "name": "Name of the trip, for example \"Commute\".",
+          "start": "Type an address or pick an entity.",
+          "end": "Type an address or pick an entity.",
+          "scan_interval": "0 = only when the button is pressed. Otherwise refresh every X minutes."
+        }
+      },
+      "reconfigure": {
+        "title": "Edit trip",
+        "description": "Change name, start, destination or the update interval.",
+        "data": {
+          "name": "Name",
+          "start": "Start",
+          "end": "Destination",
+          "scan_interval": "Update automatically"
+        },
+        "data_description": {
+          "name": "Name of the trip, for example \"Commute\".",
+          "start": "Type an address or pick an entity.",
+          "end": "Type an address or pick an entity.",
+          "scan_interval": "0 = only when the button is pressed. Otherwise refresh every X minutes."
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "addon_unreachable": "The Travel Time add-on is not reachable on port 6730. Please start the add-on and try again.",
+      "entity_no_coordinates": "This entity currently has no coordinates. Choose a different entity or use an address.",
+      "entity_not_found": "This entity does not exist (any more).",
+      "name_required": "Please give the trip a name.",
+      "no_location": "Please enter an address or pick an entity.",
+      "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "A trip with this name already exists.",
+      "reconfigure_successful": "The trip was updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit trip",
+        "description": "Change name, start, destination or the update interval.",
+        "data": {
+          "name": "Name",
+          "start": "Start",
+          "end": "Destination",
+          "scan_interval": "Update automatically"
+        },
+        "data_description": {
+          "name": "Name of the trip, for example \"Commute\".",
+          "start": "Type an address or pick an entity.",
+          "end": "Type an address or pick an entity.",
+          "scan_interval": "0 = only when the button is pressed. Otherwise refresh every X minutes."
+        }
+      }
+    },
+    "error": {
+      "entity_no_coordinates": "This entity currently has no coordinates. Choose a different entity or use an address.",
+      "entity_not_found": "This entity does not exist (any more).",
+      "name_required": "Please give the trip a name.",
+      "no_location": "Please enter an address or pick an entity.",
+      "unknown": "Unexpected error"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "travel_time": {
+        "name": "Travel time"
+      },
+      "last_updated": {
+        "name": "Last updated"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh now"
+      }
     }
   }
 }

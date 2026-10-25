@@ -1,11 +1,17 @@
-from flask import Flask, request, jsonify
-from playwright.sync_api import sync_playwright
-import nest_asyncio
+"""Travel Time add-on - scrapes Google Maps for a travel time.
+
+Endpoint:
+    GET /traveltime?start=<address|lat,lon>&end=<address|lat,lon>
+        -> {"travel_time_minutes": 16, "distance_km": 12.4, "distance_text": "12,4 km"}
+    GET /health
+        -> {"status": "ok", "version": "..."}
+"""
+
+from flask import Flask, jsonify, request
 import re
 import urllib.parse
 
-# nest_asyncio anwenden, um Event-Loop-Konflikte zu vermeiden
-nest_asyncio.apply()
+VERSION = "1.1.0"
 
 app = Flask(__name__)
 
@@ -17,7 +23,10 @@ DURATION_PATTERN = re.compile(
     r"(?:(\d+)\s*(?:Std\.?|Stunden?|h)\s*)?(\d+)\s*min\b",
     re.IGNORECASE,
 )
-DISTANCE_PATTERN = re.compile(r"\b\d+(?:[,.]\d+)?\s*km\b", re.IGNORECASE)
+DISTANCE_PATTERN = re.compile(r"\b\d+(?:[,.]\d+)?\s*(?:km|m)\b", re.IGNORECASE)
+DISTANCE_VALUE_PATTERN = re.compile(r"(\d+(?:[,.]\d+)?)\s*(km|m)\b", re.IGNORECASE)
+
+MAPS_URL = "https://www.google.com/maps/dir/{start}/{end}"
 
 
 def duration_to_minutes(text: str) -> int | None:
@@ -29,6 +38,30 @@ def duration_to_minutes(text: str) -> int | None:
     hours = int(match.group(1) or 0)
     minutes = int(match.group(2))
     return hours * 60 + minutes
+
+
+def distance_to_km(text: str) -> float | None:
+    """Extrahiert die erste Entfernung ('12,4 km' oder '800 m') in Kilometern."""
+    match = DISTANCE_VALUE_PATTERN.search(text.replace("\xa0", " "))
+    if not match:
+        return None
+
+    value = float(match.group(1).replace(",", "."))
+    if match.group(2).lower() == "m":
+        value /= 1000
+    return round(value, 2)
+
+
+def build_maps_url(start: str, end: str) -> str:
+    """Baut die Routenplaner-URL.
+
+    Start/Ziel dürfen Adressen oder bereits aufgelöste Koordinaten ("51.5,7.4") sein;
+    Kommas bleiben lesbar, alles andere wird kodiert.
+    """
+    return MAPS_URL.format(
+        start=urllib.parse.quote(start.strip(), safe=","),
+        end=urllib.parse.quote(end.strip(), safe=","),
+    )
 
 
 def get_best_route_text(page) -> str:
@@ -69,12 +102,18 @@ def get_best_route_text(page) -> str:
     raise ValueError("Keine Reisezeit im Google-Maps-Routenplaner gefunden.")
 
 
-def get_travel_time(start: str, end: str) -> int:
+def get_travel_time(start: str, end: str) -> dict:
     """
-    Diese Funktion startet Playwright, navigiert zu Google Maps
-    und extrahiert die Reisezeit.
+    Startet Playwright, navigiert zu Google Maps und extrahiert die Reisezeit.
+
+    Rückgabe bei Erfolg: {"travel_time_minutes": int, "distance_km": float|None, ...}
+    Rückgabe bei Fehler:  {"error": "<Meldung>"}
     """
-    print("Got request")
+    # Playwright wird erst hier importiert: so bleiben die Parser-Funktionen
+    # ohne Browser-Abhängigkeit testbar.
+    from playwright.sync_api import sync_playwright
+
+    print(f"Got request: {start!r} -> {end!r}", flush=True)
     browser = None
     try:
         with sync_playwright() as p:
@@ -82,12 +121,7 @@ def get_travel_time(start: str, end: str) -> int:
             browser = p.firefox.launch(headless=True)
             page = browser.new_page(locale="de-DE", timezone_id="Europe/Berlin")
 
-            url = (
-                "https://www.google.com/maps/dir/"
-                f"{urllib.parse.quote(start, safe='')}/"
-                f"{urllib.parse.quote(end, safe='')}"
-            )
-            page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            page.goto(build_maps_url(start, end), wait_until="domcontentloaded", timeout=60000)
 
             # Auf Cookie-Banner warten und ablehnen/akzeptieren, falls vorhanden.
             try:
@@ -106,36 +140,61 @@ def get_travel_time(start: str, end: str) -> int:
                 raise ValueError(f"Reisezeit konnte nicht ausgelesen werden: {route_text!r}")
 
             browser.close()
-            return travel_time
+            browser = None
+
+            return {
+                "travel_time_minutes": travel_time,
+                "distance_km": distance_to_km(route_text),
+                "distance_text": _first_distance_text(route_text),
+                "version": VERSION,
+            }
 
     except Exception as e:
-        if browser is not None and browser.is_connected():
-            browser.close()
-        print("Fehler in get_travel_time:", e)
+        print("Fehler in get_travel_time:", e, flush=True)
         import traceback
+
         traceback.print_exc()
-        return -1
+        return {"error": f"{type(e).__name__}: {e}"}
+    finally:
+        if browser is not None:
+            try:
+                browser.close()
+            except Exception:  # noqa: BLE001 - Browser kann bereits weg sein
+                pass
 
 
-@app.route('/traveltime', methods=['GET'])
+def _first_distance_text(text: str) -> str | None:
+    """Gibt die erste gefundene Entfernungsangabe im Original zurück (z. B. '12,4 km')."""
+    match = DISTANCE_VALUE_PATTERN.search(text.replace("\xa0", " "))
+    return match.group(0).strip() if match else None
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Wird von der Integration als schneller Erreichbarkeitscheck genutzt."""
+    return jsonify({"status": "ok", "version": VERSION})
+
+
+@app.route("/traveltime", methods=["GET"])
 def travel_time_endpoint():
     """
     API-Endpunkt, der start und end als Query-Parameter erwartet.
     Beispiel: /traveltime?start=Berlin&end=Hamburg
     """
-    start_location = request.args.get('start')
-    end_location = request.args.get('end')
+    start_location = (request.args.get("start") or "").strip()
+    end_location = (request.args.get("end") or "").strip()
 
     if not start_location or not end_location:
         return jsonify({"error": "Bitte 'start' und 'end' als Parameter angeben."}), 400
 
-    travel_time = get_travel_time(start_location, end_location)
+    result = get_travel_time(start_location, end_location)
 
-    if travel_time != -1:
-        return jsonify({"travel_time_minutes": travel_time})
-    else:
-        return jsonify({"error": "Reisezeit konnte nicht ermittelt werden."}), 500
+    if "error" in result:
+        return jsonify(result), 500
+    return jsonify(result)
+
 
 if __name__ == "__main__":
     from waitress import serve
+
     serve(app, host="0.0.0.0", port=6730)

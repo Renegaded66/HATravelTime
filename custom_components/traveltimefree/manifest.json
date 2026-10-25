@@ -1,15 +1,14 @@
 {
   "domain": "traveltime",
-  "name": "Travel Time Free (No Api Key)",
+  "name": "Travel Time",
   "codeowners": ["@Renegaded66"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http"],
   "documentation": "https://github.com/Renegaded66/HATravelTime",
-  "homekit": {},
-  "iot_class": "calculated",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Renegaded66/HATravelTime/issues",
   "quality_scale": "bronze",
   "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "version": "1.0.1"
+  "version": "2.0.0"
 }

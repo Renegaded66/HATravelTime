@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fahrt einrichten",
+        "description": "Eine Seite, drei Felder. Bei **Start** und **Ziel** kannst du entweder eine **Adresse** eintippen oder eine **Entität** auswählen (Person, Zone, Device Tracker, Sensor mit Koordinaten). Entitäten werden bei jeder Abfrage neu in Koordinaten umgerechnet.\n\nVoraussetzung: Das Add-on **Travel Time** ist installiert und gestartet.",
+        "data": {
+          "name": "Name",
+          "start": "Startpunkt",
+          "end": "Zielpunkt",
+          "scan_interval": "Automatisch aktualisieren"
+        },
+        "data_description": {
+          "name": "Name der Fahrt, zum Beispiel \"Arbeitsweg\".",
+          "start": "Adresse eintippen oder Entität auswählen.",
+          "end": "Adresse eintippen oder Entität auswählen.",
+          "scan_interval": "0 = nur wenn der Button gedrückt wird. Sonst alle X Minuten automatisch."
+        }
+      },
+      "reconfigure": {
+        "title": "Fahrt bearbeiten",
+        "description": "Name, Startpunkt, Zielpunkt oder Aktualisierungsintervall ändern.",
+        "data": {
+          "name": "Name",
+          "start": "Startpunkt",
+          "end": "Zielpunkt",
+          "scan_interval": "Automatisch aktualisieren"
+        },
+        "data_description": {
+          "name": "Name der Fahrt, zum Beispiel \"Arbeitsweg\".",
+          "start": "Adresse eintippen oder Entität auswählen.",
+          "end": "Adresse eintippen oder Entität auswählen.",
+          "scan_interval": "0 = nur wenn der Button gedrückt wird. Sonst alle X Minuten automatisch."
+        }
+      }
+    },
+    "error": {
+      "addon_unreachable": "Das Add-on \"Travel Time\" ist auf Port 6730 nicht erreichbar. Bitte das Add-on starten und erneut versuchen.",
+      "entity_no_coordinates": "Diese Entität hat gerade keine Koordinaten. Andere Entität wählen oder eine Adresse eintragen.",
+      "entity_not_found": "Diese Entität existiert nicht (mehr).",
+      "name_required": "Bitte einen Namen für die Fahrt angeben.",
+      "no_location": "Bitte eine Adresse eintragen oder eine Entität auswählen.",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Eine Fahrt mit diesem Namen existiert bereits.",
+      "reconfigure_successful": "Die Fahrt wurde aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fahrt bearbeiten",
+        "description": "Name, Startpunkt, Zielpunkt oder Aktualisierungsintervall ändern.",
+        "data": {
+          "name": "Name",
+          "start": "Startpunkt",
+          "end": "Zielpunkt",
+          "scan_interval": "Automatisch aktualisieren"
+        },
+        "data_description": {
+          "name": "Name der Fahrt, zum Beispiel \"Arbeitsweg\".",
+          "start": "Adresse eintippen oder Entität auswählen.",
+          "end": "Adresse eintippen oder Entität auswählen.",
+          "scan_interval": "0 = nur wenn der Button gedrückt wird. Sonst alle X Minuten automatisch."
+        }
+      }
+    },
+    "error": {
+      "entity_no_coordinates": "Diese Entität hat gerade keine Koordinaten. Andere Entität wählen oder eine Adresse eintragen.",
+      "entity_not_found": "Diese Entität existiert nicht (mehr).",
+      "name_required": "Bitte einen Namen für die Fahrt angeben.",
+      "no_location": "Bitte eine Adresse eintragen oder eine Entität auswählen.",
+      "unknown": "Unerwarteter Fehler"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "travel_time": {
+        "name": "Reisezeit"
+      },
+      "last_updated": {
+        "name": "Letzte Aktualisierung"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Jetzt aktualisieren"
+      }
+    }
+  }
+}

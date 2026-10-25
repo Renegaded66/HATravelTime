@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editors
+.vs/
+.idea/
+*.swp
+
+# Local environments
+.venv/
+venv/
