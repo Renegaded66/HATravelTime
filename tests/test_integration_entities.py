@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import _ha_stub_entities
 
 _ha_stub_entities.install()

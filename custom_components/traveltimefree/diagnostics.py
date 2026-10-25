@@ -15,7 +15,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry[TravelTimeCoordinator]
 ) -> dict[str, Any]:
     """Return everything needed to debug a broken setup."""
-    coordinator: TravelTimeCoordinator = entry.runtime_data
+    coordinator: TravelTimeCoordinator | None = getattr(entry, "runtime_data", None)
+    if coordinator is None:
+        return {
+            "entry": {"title": entry.title, "version": entry.version},
+            "error": "Der Eintrag ist nicht geladen - siehe Log und Reparaturhinweise.",
+        }
     data = coordinator.data
 
     return {

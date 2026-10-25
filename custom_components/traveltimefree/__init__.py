@@ -81,5 +81,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             version=CONFIG_VERSION,
         )
         _LOGGER.info("Eintrag %s auf Version %s migriert", entry.entry_id, CONFIG_VERSION)
+        return True
 
     return entry.version == CONFIG_VERSION

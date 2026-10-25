@@ -38,6 +38,9 @@ def install() -> None:
             cls.domain = domain
 
     class ConfigEntry:
+        def __class_getitem__(cls, item: Any) -> Any:
+            return cls
+
         def __init__(self, **kwargs: Any) -> None:
             self.data = kwargs.get("data", {})
             self.options = kwargs.get("options", {})
@@ -80,6 +83,10 @@ def install() -> None:
     class UnitOfTime:
         MINUTES = "min"
 
+    class Platform:
+        SENSOR = "sensor"
+        BUTTON = "button"
+
     class _Mode:
         BOX = "box"
         DROPDOWN = "dropdown"
@@ -97,7 +104,12 @@ def install() -> None:
         ConfigFlowResult=dict,
         OptionsFlowWithReload=OptionsFlowWithReload,
     )
-    _module("homeassistant.const", CONF_NAME="name", UnitOfTime=UnitOfTime)
+    _module(
+        "homeassistant.const",
+        CONF_NAME="name",
+        UnitOfTime=UnitOfTime,
+        Platform=Platform,
+    )
     _module(
         "homeassistant.core",
         HomeAssistant=type("HomeAssistant", (), {}),
